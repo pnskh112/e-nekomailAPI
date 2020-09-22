@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 export DISPLAY='unix:0.0'
 # 認証キーセット
 OcpApimSubscriptionKey="xxxhogehogexxx"
@@ -39,10 +39,10 @@ echo "$requesturi/sdms/mails/inbox" >> $log 2>&1
 #       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
 #       -H "Content-Type: application/json" \
 #       -d "$json" "$requesturi/sdms/mails/inbox/" >/dev/null
-curl  -X POST \
+curl  -X POST "$requesturi/sdms/mails/inbox/" \
       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
       -H "Content-Type: application/json" \
-      -d "$json" "$requesturi/sdms/mails/inbox/" >> $log 2>&1
+      -d "$json" >> $log 2>&1
 echo "Access ReceiveListApi End" >> $log 2>&1
 # メールID取得（仮）
 # mailId="{:id}"
@@ -63,10 +63,10 @@ EOS
 #       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
 #       -H "Content-Type: application/json" \
 #       -d "$json" "$requesturi/sdms/mails/$mailId/resume/$fileId" >/dev/null
-curl  -X GET \
+curl  -X GET "$requesturi/sdms/mails/inbox/${mailId}" \
       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
       -H "Content-Type: application/json" \
-      -d "$json" "$requesturi/sdms/mails/inbox/${mailId}" >> $log 2>&1
+      -d "$json" >> $log 2>&1
 responseJson=$(cat << EOS
 {
     "replyDeadline": null,
@@ -162,10 +162,10 @@ EOS
     #       -H "Content-Type: application/json" \
     #       -d "$json" \
     #       -O "$requesturi/sdms/mails/inbox/${mailId}/attachment/${fileId}/" >> $log 2>&1
-    curl  -X GET \
+    curl  -X GET  "$requesturi/sdms/mails/inbox/${mailId}/attachment/${fileId}/" \
           -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
           -H "Content-Type: application/json" \
-          -d "$json" "$requesturi/sdms/mails/inbox/${mailId}/attachment/${fileId}/" >> $log 2>&1
+          -d "$json">> $log 2>&1
     
     echo "Access download End" >> $log 2>&1
 done
