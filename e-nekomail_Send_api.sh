@@ -1,4 +1,4 @@
-! /bin/bash
+#!/bin/bash
 export DISPLAY='unix:0.0'
 # 認証キーセット
 srcName="e-nekomail_Send_api.sh"
@@ -7,35 +7,15 @@ filename="request.body"
 # 送信するZIPファイル名
 # file="\/home\/dycsales\/data\/download\/csv\/yamato_senddata.zip"
 # file="\/home\/vagrant\/watir_src\/Ruby\/testmailaddress.txt"
-file="testmail.txt"
+file="./testmail.txt"
 mailAddress="aaa@example.com"
 mailStatusMonitorTimer=""
-OcpApimSubscriptionKey="xxxhogehogexxx"
+OcpApimSubscriptionKey="xxxhogexxx"
 requesturi="https://fcms.i-securedeliver.jp"
 log="/home/vagrant/watir_src/Ruby/logs/delive_export_logs/e-nekomail_Send.log"
+# log="/home/sou/project_share/e-nekomailAPI/log/e-nekomail_Send.log"
 echo "------------------------------------------------" >> $log 2>&1
 echo "${srcName} is start." >> $log 2>&1
-        # # リクエストボディの定義
-        # json=$(cat << EOF
-# {
-#     "repositoryType" : 2,
-#     "attachedFiles" : [
-#         {
-#             "fileName" : ${file}
-#         }
-#     ],
-#     "downloadDeadline" : "2020-09-18T00:00:00.000Z",
-#     "replyDeadline" : "2020-09-18T00:00:00.000Z",
-#     "title" : "TestTitle",
-#     "comment" : "TestComment",
-#     "receivers" : [
-#         {
-#             "mailAddress1" : "s.takeuchi@leafnet.jp"
-#         }
-#     ]
-# }
-        # EOF
-        # )
 # メール情報登録APIを実行。メールIDを取得
 echo $json >> $log 2>&1
 echo "Access mailApi Start" >> $log 2>&1
@@ -54,7 +34,7 @@ echo "https://fcms.i-securedeliver.jp/sdms/mails/add" >> $log 2>&1
 #       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
 #       -H "Content-Type: application/json" \
 #       -d "$json" "$requesturi/sdms/mails/history/1" >/dev/null
-curl  -X POST "https://fcms.i-securedeliver.jp/sdms/mails/add"\
+res=`curl  -X POST "https://fcms.i-securedeliver.jp/sdms/mails/add"\
       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
       -H "Content-Type: application/json" \
       --data-binary @- <<EOF | jq
@@ -65,17 +45,18 @@ curl  -X POST "https://fcms.i-securedeliver.jp/sdms/mails/add"\
             "fileName": "testmail.txt"
         }
     ],
-    "downloadDeadline": "2020-09-19T00:00:00.000Z",
+    "downloadDeadline": "2020-09-24T00:00:00.000Z",
     "downloadReminder": {},
     "language": "JAPANESE",
     "title": "testTitle",
     "comment": "Comment Test",
     "receivers": [
         {
-            "mailAddress1": ${mailAddress}
+            "mailAddress1": "s.takeuchi@leafnet.jp"
         }
     ]
 }
+`
 EOF
 echo "Access mailApi End" >> $log 2>&1
 echo ${res} >> $log 2>&1
@@ -114,19 +95,19 @@ echo "Access taskApi Start" >> $log 2>&1
 res3=`curl  -X GET "$requesturi/sdms/mails/history/$mailId"\
       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
       -H "Content-Type: application/json" \
-      -d @- <<EOF
-{
-    "mailId": ${mailId}
-}
+      --data-binary @- <<EOF | jq
+	{
+		"mailId": ${mailId}
+	}
 EOF
 `
 # ステータス取得
-status=`echo ${res} | jq '.status'`
+status=`echo ${res3} | jq -r '.status'`
 echo ${res3}
 echo ${status}
-# if [ $status = "FINISHED" ]; then
-#     echo "status is FINISHED!" >> $log 2>&1
-# fi
+if [ $status = "FINISHED" ]; then
+    echo "status is FINISHED!" >> $log 2>&1
+fi
 echo "Access taskApi End" >> $log 2>&1
 echo "${srcName} is end." >> $log 2>&1
 echo "------------------------------------------------" >> $log 2>&1
