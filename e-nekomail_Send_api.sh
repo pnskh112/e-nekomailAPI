@@ -52,7 +52,7 @@ res=`curl  -X POST "https://fcms.i-securedeliver.jp/sdms/mails/add"\
     "comment": "Comment Test",
     "receivers": [
         {
-            "mailAddress1": "s.takeuchi@leafnet.jp"
+            "mailAddress1": ${mailAddress}
         }
     ]
 }
