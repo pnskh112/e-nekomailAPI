@@ -1,5 +1,6 @@
 #!/bin/bash
 export DISPLAY='unix:0.0'
+
 # 認証キーセット
 srcName="e-nekomail_Send_api.sh"
 mailId=""
@@ -7,13 +8,14 @@ filename="request.body"
 # 送信するZIPファイル名
 # file="\/home\/dycsales\/data\/download\/csv\/yamato_senddata.zip"
 # file="\/home\/vagrant\/watir_src\/Ruby\/testmailaddress.txt"
-file="./testmail.txt"
-mailAddress="aaa@example.com"
+file="testmail.txt"
+fileName='"fileName" : "testmail.txt"'
+mailAddress1="aaa@example"
+
 mailStatusMonitorTimer=""
 OcpApimSubscriptionKey="xxxhogexxx"
 requesturi="https://fcms.i-securedeliver.jp"
 log="/home/vagrant/watir_src/Ruby/logs/delive_export_logs/e-nekomail_Send.log"
-# log="/home/sou/project_share/e-nekomailAPI/log/e-nekomail_Send.log"
 echo "------------------------------------------------" >> $log 2>&1
 echo "${srcName} is start." >> $log 2>&1
 # メール情報登録APIを実行。メールIDを取得
@@ -27,6 +29,10 @@ echo "https://fcms.i-securedeliver.jp/sdms/mails/add" >> $log 2>&1
         
         # # 返信期限(1カ月後を指定する例)
         # month1=date"+%Y/%m/%d" -d "1 month"
+
+# リクエストボディの作成（attachedFildes,receivers）
+downloadDeadline="2020-09-25T00:00:00.000Z"
+
 # リクエストボディの定義
 # リクエストとレスポンスを表示するオプション付きのcurlコマンド
 # curl --verbose \
@@ -34,30 +40,34 @@ echo "https://fcms.i-securedeliver.jp/sdms/mails/add" >> $log 2>&1
 #       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
 #       -H "Content-Type: application/json" \
 #       -d "$json" "$requesturi/sdms/mails/history/1" >/dev/null
-res=`curl  -X POST "https://fcms.i-securedeliver.jp/sdms/mails/add"\
+res=`curl -X POST "https://fcms.i-securedeliver.jp/sdms/mails/add"\
       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
       -H "Content-Type: application/json" \
       --data-binary @- <<EOF | jq
 {
     "repositoryType": 2,
-    "attachedFiles": [
+    "attachedFiles":[
         {
-            "fileName": "testmail.txt"
+            ${fileName}
         }
-    ],
-    "downloadDeadline": "2020-09-24T00:00:00.000Z",
+	],
+    "downloadDeadline": "${downloadDeadline}",
     "downloadReminder": {},
     "language": "JAPANESE",
     "title": "testTitle",
     "comment": "Comment Test",
-    "receivers": [
+    "receivers": 
+    [
         {
-            "mailAddress1": ${mailAddress}
+            "mailAddress1": "${mailAddress1}"
         }
     ]
 }
-`
 EOF
+`
+
+echo ${res}
+
 echo "Access mailApi End" >> $log 2>&1
 echo ${res} >> $log 2>&1
 # メールID取得
