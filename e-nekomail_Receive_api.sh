@@ -2,7 +2,7 @@
 export DISPLAY='unix:0.0'
 
 # 認証キーセット
-OcpApimSubscriptionKey="===hoge==="
+OcpApimSubscriptionKey="5bd066a503af4753a8ab751925e9c531"
 srcName="e-nekomail_Receive_api.sh"
 mailId=""
 mailStatusMonitorTimer=""
@@ -76,7 +76,7 @@ for key in $(echo ${res} | jq '.iwsdWebMail[].iwsdreceiver[].id'); do
 
     #ファイル名を配列に作成 
     arrayFileName=()
-    for fileName in $(echo ${res2} | jq '.iwsdfile[].fileName'); do
+    for fileName in $(echo ${res2} | jq -r '.iwsdfile[].fileName'); do
         arrayFileName+=(${fileName})
     done
 
@@ -117,4 +117,3 @@ for key in $(echo ${res} | jq '.iwsdWebMail[].iwsdreceiver[].id'); do
 done
 echo "${srcName} is end." >> $log 2>&1
 echo "------------------------------------------------" >> $log 2>&1
-exit 0
