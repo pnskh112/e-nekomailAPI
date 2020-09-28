@@ -6,16 +6,20 @@ srcName="e-nekomail_Send_api.sh"
 mailId=""
 filename="request.body"
 # 送信するZIPファイル名
-# file="\/home\/dycsales\/data\/download\/csv\/yamato_senddata.zip"
+file="/home/dycsales/data/download/csv/yamato_senddata.zip"
 # file="\/home\/vagrant\/watir_src\/Ruby\/testmailaddress.txt"
-file="testmail.txt"
-fileName='"fileName" : "testmail.txt"'
-mailAddress1="aaa@example"
+# file="testmail.txt"
+
+# fileName='"fileName" : "testmail.txt"'
+fileName='"fileName" : "request.body"'
+mailAddress1="aaa@example.com"
 
 mailStatusMonitorTimer=""
-OcpApimSubscriptionKey="xxxhogexxx"
+OcpApimSubscriptionKey="---hoge---"
 requesturi="https://fcms.i-securedeliver.jp"
-log="/home/vagrant/watir_src/Ruby/logs/delive_export_logs/e-nekomail_Send.log"
+# log="/home/vagrant/watir_src/Ruby/logs/delive_export_logs/e-nekomail_Send.log"
+log="./e-nekomail_Send.log"
+
 echo "------------------------------------------------" >> $log 2>&1
 echo "${srcName} is start." >> $log 2>&1
 # メール情報登録APIを実行。メールIDを取得
@@ -31,7 +35,7 @@ echo "https://fcms.i-securedeliver.jp/sdms/mails/add" >> $log 2>&1
         # month1=date"+%Y/%m/%d" -d "1 month"
 
 # リクエストボディの作成（attachedFildes,receivers）
-downloadDeadline="2020-09-25T00:00:00.000Z"
+downloadDeadline="2020-09-26T00:00:00.000Z"
 
 # リクエストボディの定義
 # リクエストとレスポンスを表示するオプション付きのcurlコマンド
@@ -121,3 +125,4 @@ fi
 echo "Access taskApi End" >> $log 2>&1
 echo "${srcName} is end." >> $log 2>&1
 echo "------------------------------------------------" >> $log 2>&1
+
