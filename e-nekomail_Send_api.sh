@@ -5,10 +5,9 @@ export DISPLAY='unix:0.0'
 #
 #    概要        ： e-ネコセキュアデリバー　送信
 #
-#    履歴        ：2020/09/28 Create by S.Takeuchi
+#    履歴        ：2020/09/28 Create by hoge
 #
 #*******************************************************************************
-
 
 # 認証キーセット
 OcpApimSubscriptionKey="---hoge---"
@@ -45,6 +44,7 @@ echo "$requesturi/sdms/mails/add" >> $log 2>&1
 downloadDeadline=`date "+%Y-%m-%dT00:00:00.000Z" -d "7 days"`
 
 # リクエストボディの定義
+echo "メール情報登録API実行" >> $log 2>&1
 res=`curl -X POST "$requesturi/sdms/mails/add"\
       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
       -H "Content-Type: application/json" \
@@ -103,13 +103,14 @@ echo "Access mailApi End" >> $log 2>&1
 
 # メールID取得
 mailId=`echo ${res} | jq '.id'`
-echo ${mailId} >> $log 2>&1
+echo "メールID：${mailId}" >> $log 2>&1
 
-# # ファイルID取得
+# ファイルID取得
 fileId=`echo ${res} | jq -r '.attachedFiles[].id'`
-echo ${fileId} >> $log 2>&1
+echo "ファイルID:${fileId}" >> $log 2>&1
 
 # ファイル登録API実行
+echo "ファイル登録API実行" >> $log 2>&1
 echo "Access fileApi Start" >> $log 2>&1
 echo "$requesturi/sdms/mails/$mailId/resume/$fileId" >> $log 2>&1
 res2=`curl -X POST "$requesturi/sdms/mails/$mailId/resume/$fileId" \
@@ -130,6 +131,7 @@ echo "Access fileApi End" >> $log 2>&1
 echo "------------------------------------------------" >> $log 2>&1
 
 # タスク結果取得API実行
+echo "タスク結果取得API実行" >> $log 2>&1
 echo "Access taskApi Start" >> $log 2>&1
 res3=`curl  -X GET "$requesturi/sdms/mails/history/$mailId"\
       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
@@ -153,15 +155,16 @@ EOF
 # `
 
 # ステータス取得
+echo "ステータス取得" >> $log 2>&1
 status=`echo ${res3} | jq -r '.status'`
 echo ${res3} >> $log 2>&1
 echo ${status} >> $log 2>&1
 if [ $status = "FINISHED" ]; then
     echo "status is FINISHED!" >> $log 2>&1
 else
-    return 1
+    exit 1
 fi
 echo "Access taskApi End" >> $log 2>&1
 echo "${srcName} is end." >> $log 2>&1
 echo "------------------------------------------------" >> $log 2>&1
-return 0
+exit 0
