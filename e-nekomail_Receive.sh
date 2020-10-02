@@ -5,7 +5,7 @@ export DISPLAY='unix:0.0'
 #
 #    概要        ： e-ネコセキュアデリバー　受信
 #
-#    履歴        ：2020/09/28 Create by S.Takeuchi
+#    履歴        ：2020/09/28 Create by hoge
 #
 #*******************************************************************************
 
@@ -33,12 +33,12 @@ date_m=$2
 date_d=$3
 date_ymd="${date_y}-${date_m}-${date_d}"
 
-# 初回稼働確認
+# メイン処理
 echo "------------------------------------------------" >> $log 2>&1
 echo "${srcName} is start at ${date_ymd} ." >> $log 2>&1
 
 # 受信一覧取得API実行
-echo "受信一覧取得API" >> $log 2>&1
+echo "受信一覧取得API実行" >> $log 2>&1
 echo "Access ReceiveListApi Start" >> $log 2>&1
 echo "$requesturi/sdms/mails/inbox" >> $log 2>&1
 res=`curl  -X POST "$requesturi/sdms/mails/inbox/" \
@@ -46,7 +46,7 @@ res=`curl  -X POST "$requesturi/sdms/mails/inbox/" \
       -H "Content-Type: application/json" \
       -d @- << EOF | jq
 {
-    "inboxMailStatus": "NOT_READ",
+    "inboxMailStatus": "READ",
 	"sendDateFrom": "${date_ymd}T00:00:00.000Z",
 	"sendDateTo": "${date_ymd}T23:59:59.000Z",
 	"skip": 0,
@@ -75,21 +75,32 @@ echo ${res} >> $log 2>&1
 echo "Access ReceiveListApi End" >> $log 2>&1
 
 # メールID取得
+echo "メールID取得" >> $log 2>&1
 mailId=`echo ${res} | jq '.iwsdWebMail[].iwsdreceiver[].id'`
-echo ${mailId} >> $log 2>&1
+echo "メールID：${mailId}" >> $log 2>&1
 for key in $(echo ${res} | jq '.iwsdWebMail[].iwsdreceiver[].id'); do
 
     mailId=${key}
     echo "$requesturi/sdms/mails/inbox/$mailId" >> $log 2>&1
 
     # 受信詳細情報取得API実行
+    echo "受信詳細情報取得API実行" >> $log 2>&1
     res2=`curl  -X GET "$requesturi/sdms/mails/inbox/$mailId" \
           -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey"`
-
     # リクエストとレスポンスを表示するオプション付きのcurlコマンド(障害時のデバッグに利用)
     # res2=`curl --verbose \
     #   -X GET "$requesturi/sdms/mails/inbox/$mailId" \
     #   -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey"`
+
+    # リクエスト回数エラーがセキュアデリバー側から返ってくることがあるためエラーキャッチを追加。
+    if [[  $( echo $res2 | jq 'select(contains({ statusCode: 429 }))') ]]; then
+        echo "429Error Is Occured!!!!" >> $log 2>&1
+        echo "---------------------------------------------------------------" >> $log 2>&1
+        echo "セキュアデリバーから、リクエスト回数エラーが返されています。" >> $log 2>&1
+        echo "時間をおいて再度日付を入力し、「紐付けデータ受信」押してください。" >> $log 2>&1
+        echo "---------------------------------------------------------------" >> $log 2>&1
+        exit 9
+    fi
 
     echo ${res2} >> $log 2>&1
     echo "===" >> $log 2>&1
@@ -105,13 +116,14 @@ for key in $(echo ${res} | jq '.iwsdWebMail[].iwsdreceiver[].id'); do
     i=0
     for fileId in $(echo $res2 | jq -r '.iwsdfile[].id');
     do
-        echo "---i---" >> $log 2>&1
+        echo "---fileId---" >> $log 2>&1
         echo $fileId >> $log 2>&1
-        echo "---array---" >> $log 2>&1
+        echo "---FileName---" >> $log 2>&1
         echo $arrayFileName[$i] >> $log 2>&1
 
 
         # ダウンロード API実行
+        echo "ダウンロード API実行" >> $log 2>&1
         echo "Access download Start" >> $log 2>&1
         echo "$requesturi/sdms/mails/inbox/${mailId}/attachment/${fileId}/" >> $log 2>&1
         
@@ -133,5 +145,5 @@ for key in $(echo ${res} | jq '.iwsdWebMail[].iwsdreceiver[].id'); do
 done
 echo "${srcName} is end." >> $log 2>&1
 echo "------------------------------------------------" >> $log 2>&1
-return 0
+exit 0
 
