@@ -1,6 +1,5 @@
-
-
-rt DISPLAY='unix:0.0'
+#!/bin/bash -eu
+export DISPLAY='unix:0.0'
 #*******************************************************************************
 # e-nekomail_Send.sh
 #
