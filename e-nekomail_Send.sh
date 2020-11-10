@@ -45,6 +45,7 @@ downloadDeadline=`date "+%Y-%m-%dT00:00:00.000Z" -d "7 days"`
 
 # リクエストボディの定義
 echo "メール情報登録API実行" >> $log 2>&1
+
 res=`curl -X POST "$requesturi/sdms/mails/add"\
       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
       -H "Content-Type: application/json" \
@@ -113,11 +114,17 @@ echo "ファイルID:${fileId}" >> $log 2>&1
 echo "ファイル登録API実行" >> $log 2>&1
 echo "Access fileApi Start" >> $log 2>&1
 echo "$requesturi/sdms/mails/$mailId/resume/$fileId" >> $log 2>&1
-res2=`curl -X POST "$requesturi/sdms/mails/$mailId/resume/$fileId" \
-      -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
-      -H "Content-Type: multipart/form-data" \
-      -F "file=@$file"
-`
+
+# タイムアウト対策のため、3回処理実施
+for i in {1..3};
+do
+
+###res2=`curl -X POST "$requesturi/sdms/mails/$mailId/resume/$fileId" \
+###      -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
+###      -H "Content-Type: multipart/form-data" \
+###      -F "file=@$file"
+###`
+
 # リクエストとレスポンスを表示するオプション付きのcurlコマンド(障害時のデバッグに利用)
 # res2=`curl --verbose \
 #       -X POST "$requesturi/sdms/mails/$mailId/resume/$fileId" \
@@ -127,6 +134,28 @@ res2=`curl -X POST "$requesturi/sdms/mails/$mailId/resume/$fileId" \
 # `
 
 echo ${res2} >> $log 2>&1
+
+# 変数resに対して、JSON形式で値チェック行い、コール数上限エラー出た際3分スリープ入れる。
+if [[  $( echo $res2 | jq 'select(contains({ statusCode: 429 }))') ]]; then
+    echo "-------------------------------------------------------------"
+    echo "コール数上限のレスポンスがセキュアデリバーより返されました。"
+    echo "1分間スリープの後、再度実行致します。"
+    echo "-------------------------------------------------------------"
+    sleep 1m
+# 上限エラーなく、ファイル登録時のレスポンス返ってくればループ抜ける
+else if [[ $( echo $res | jq 'select(.attachedFiles != "NULL")')  ]]; then
+    break
+fi
+
+if [ $i -eq 3]; then
+    echo "タイムアウトします。システム担当へご連絡ください。"
+    exit
+fi
+
+done
+
+
+
 echo "Access fileApi End" >> $log 2>&1
 echo "------------------------------------------------" >> $log 2>&1
 
