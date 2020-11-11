@@ -69,7 +69,7 @@ for i in 0 1 2 3; do
 # リクエストボディの定義
 echo "メール情報登録API実行" >> $log 2>&1
 
-res=`curl -X POST "$requesturi/sdms/mails/add"\
+resMailRegist=`curl -X POST "$requesturi/sdms/mails/add"\
       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
       -H "Content-Type: application/json" \
       --data-binary @- <<EOF | jq
@@ -95,7 +95,7 @@ res=`curl -X POST "$requesturi/sdms/mails/add"\
 EOF
 `
 # リクエストとレスポンスを表示するオプション付きのcurlコマンド(障害時のデバッグに利用)
-# res=`curl --verbose \
+# resMailRegist=`curl --verbose \
 #       -X POST "https://fcms.i-securedeliver.jp/sdms/mails/add"\
 #       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
 #       -H "Content-Type: application/json" \
@@ -122,17 +122,17 @@ EOF
 # EOF
 # `
 
-echo ${res} >> $log 2>&1
+echo ${resMailRegist} >> $log 2>&1
 
 
 echo "Access mailApi End" >> $log 2>&1
 
 # メールID取得
-mailId=`echo ${res} | jq '.id'`
+mailId=`echo ${resMailRegist} | jq '.id'`
 echo "メールID：${mailId}" >> $log 2>&1
 
 # ファイルID取得
-fileId=`echo ${res} | jq -r '.attachedFiles[].id'`
+fileId=`echo ${resMailRegist} | jq -r '.attachedFiles[].id'`
 echo "ファイルID:${fileId}" >> $log 2>&1
 
 # ファイル登録API実行
@@ -140,33 +140,30 @@ echo "ファイル登録API実行" >> $log 2>&1
 echo "Access fileApi Start" >> $log 2>&1
 echo "$requesturi/sdms/mails/$mailId/resume/$fileId" >> $log 2>&1
 
-  res2=`curl -X POST "$requesturi/sdms/mails/$mailId/resume/$fileId" \
+  resFileRegist=`curl -X POST "$requesturi/sdms/mails/$mailId/resume/$fileId" \
        -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
        -H "Content-Type: multipart/form-data" \
        -F "file=@$file"
   `
   
   # リクエストとレスポンスを表示するオプション付きのcurlコマンド(障害時のデバッグに利用)
-  # res2=`curl --verbose \
+  # resFileRegist=`curl --verbose \
   #       -X POST "$requesturi/sdms/mails/$mailId/resume/$fileId" \
   #       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
   #       -H "Content-Type: multipart/form-data" \
   #       -F "file=@$file"
   # `
   
-  echo ${res2} >> $log 2>&1
+  echo ${resFileRegist} >> $log 2>&1
   
-  # 変数resに対して、JSON形式で値チェック行い、コール数上限エラー出た際1分スリープ入れる。
-# デバッグ用常にTrue
-###  if [ $i != 9 ]; then
-   if [[  $( echo $res2 | jq 'select(contains({ statusCode: 429 }))') ]]; then
+  # 変数resMailRegistに対して、JSON形式で値チェック行い、コール数上限エラー出た際1分スリープ入れる。
+   if [[  $( echo $resFileRegist | jq 'select(contains({ statusCode: 429 }))') ]]; then
       echo "-------------------------------------------------------------"
       echo "コール数上限のレスポンスがセキュアデリバーより返されました。"
       echo "1分間スリープの後、再度実行致します。"
       echo "-------------------------------------------------------------"
       sleep 1m
-  # コール数上限エラーなく、ファイル登録時のレスポンス返ってくればループ抜ける
-  ### else if [[ $( echo $res | jq 'select(.attachedFiles != "NULL")')  ]]; then
+  # コール数上限エラーなければループ抜ける
   else
       break
   fi
@@ -179,7 +176,7 @@ echo "------------------------------------------------" >> $log 2>&1
 # タスク結果取得API実行
 echo "タスク結果取得API実行" >> $log 2>&1
 echo "Access taskApi Start" >> $log 2>&1
-res3=`curl  -X GET "$requesturi/sdms/mails/history/$mailId"\
+resTaskAnswer=`curl  -X GET "$requesturi/sdms/mails/history/$mailId"\
       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
       -H "Content-Type: application/json" \
       --data-binary @- <<EOF | jq
@@ -189,7 +186,7 @@ res3=`curl  -X GET "$requesturi/sdms/mails/history/$mailId"\
 EOF
 `
 # リクエストとレスポンスを表示するオプション付きのcurlコマンド(障害時のデバッグに利用)
-# res3=`curl --verbose \
+# resTaskAnswer=`curl --verbose \
 #       -X GET "$requesturi/sdms/mails/history/$mailId"\
 #       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
 #       -H "Content-Type: application/json" \
@@ -202,8 +199,8 @@ EOF
 
 # ステータス取得
 echo "ステータス取得" >> $log 2>&1
-status=`echo ${res3} | jq -r '.status'`
-echo ${res3} >> $log 2>&1
+status=`echo ${resTaskAnswer} | jq -r '.status'`
+echo ${resTaskAnswer} >> $log 2>&1
 echo ${status} >> $log 2>&1
 # タスク結果を取得して、「FINISHED」であれば終了
 if [ $status = "FINISHED" ]; then
