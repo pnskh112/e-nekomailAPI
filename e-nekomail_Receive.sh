@@ -25,12 +25,15 @@ requesturi="https://fcms.i-securedeliver.jp"
 logTime=`date +%Y%m%d_%H%M%S`
 
 # ログ出力先確認
-log="/home/dycsales/data/logs/delive_import_logs/e-nekomail_Receive_${logTime}.log"
+# log="/home/dycsales/data/logs/delive_import_logs/e-nekomail_Receive_${logTime}.log"
+log="/home/vagrant/watir_src/Ruby/logs/delive_export_logs/e-nekomail_Receive_${logTime}.log"
 echo "---log---" >> $log 2>&1
 echo $log >> $log 2>&1
 
 # 保存するZIPディレクトリ
-receive_dir="/home/dycsales/data/download/csv/received/"
+# receive_dir="/home/dycsales/data/download/csv/received/"
+receive_dir="./"
+
 
 # 引数の日付項目を取得
 date_y=$1
@@ -51,7 +54,7 @@ resGetMail=`curl  -X POST "$requesturi/sdms/mails/inbox/" \
       -H "Content-Type: application/json" \
       -d @- << EOF | jq
 {
-    "inboxMailStatus": "READ",
+    "inboxMailStatus": "NOT_READ",
 	"sendDateFrom": "${date_ymd}T00:00:00.000Z",
 	"sendDateTo": "${date_ymd}T23:59:59.000Z",
 	"skip": 0,
