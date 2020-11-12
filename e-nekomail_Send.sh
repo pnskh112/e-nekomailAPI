@@ -94,9 +94,8 @@ resMailRegist=`curl -X POST "$requesturi/sdms/mails/add"\
 }
 EOF
 `
+
   echo ${resMailRegist} >> $log 2>&1
-  
-  
   echo "Access mailApi End" >> $log 2>&1
   
   # メールID取得
@@ -117,8 +116,9 @@ EOF
        -H "Content-Type: multipart/form-data" \
        -F "file=@$file"
   `
-  
+
   echo ${resFileRegist} >> $log 2>&1
+
   # 変数resMailRegistに対して、JSON形式で値チェック行い、コール数上限エラー出た際1分スリープ入れる。
    if [[  $( echo $resFileRegist | jq 'select(contains({ statusCode: 429 }))') ]]; then
       echo "-------------------------------------------------------------"
@@ -148,6 +148,7 @@ resTaskAnswer=`curl  -X GET "$requesturi/sdms/mails/history/$mailId"\
 	}
 EOF
 `
+
 # ステータス取得
 echo "ステータス取得" >> $log 2>&1
 status=`echo ${resTaskAnswer} | jq -r '.status'`

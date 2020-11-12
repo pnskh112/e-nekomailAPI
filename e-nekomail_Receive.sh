@@ -62,6 +62,7 @@ resGetMail=`curl  -X POST "$requesturi/sdms/mails/inbox/" \
 }
 EOF
 `
+
 echo ${resGetMail} >> $log 2>&1
 echo "Access ReceiveListApi End" >> $log 2>&1
 
