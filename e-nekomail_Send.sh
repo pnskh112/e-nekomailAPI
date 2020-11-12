@@ -5,7 +5,7 @@ export DISPLAY='unix:0.0'
 #
 #    概要        ： e-ネコセキュアデリバー　送信
 #
-#    履歴        ：2020/09/28 Create by hoge
+#    履歴        ：2020/09/28 Create by S.Takeuchi
 #
 #*******************************************************************************
 
@@ -15,7 +15,7 @@ export DISPLAY='unix:0.0'
 set -e -o pipefail
 
 # 認証キーセット
-OcpApimSubscriptionKey="---hoge---"
+OcpApimSubscriptionKey="5bd066a503af4753a8ab751925e9c531"
 srcName="e-nekomail_Send_api.sh"
 requesturi="https://fcms.i-securedeliver.jp"
 
@@ -66,8 +66,8 @@ for i in 0 1 2 3; do
   fi
 
 
-# リクエストボディの定義
-echo "メール情報登録API実行" >> $log 2>&1
+  # リクエストボディの定義
+  echo "メール情報登録API実行" >> $log 2>&1
 
 resMailRegist=`curl -X POST "$requesturi/sdms/mails/add"\
       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
@@ -94,68 +94,31 @@ resMailRegist=`curl -X POST "$requesturi/sdms/mails/add"\
 }
 EOF
 `
-# リクエストとレスポンスを表示するオプション付きのcurlコマンド(障害時のデバッグに利用)
-# resMailRegist=`curl --verbose \
-#       -X POST "https://fcms.i-securedeliver.jp/sdms/mails/add"\
-#       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
-#       -H "Content-Type: application/json" \
-#       --data-binary @- <<EOF | jq
-# {
-#     "repositoryType": 2,
-#     "attachedFiles":[
-#         {
-#             ${fileName}
-#         }
-# 	],
-#     "downloadDeadline": "${downloadDeadline}",
-#     "downloadReminder": {},
-#     "language": "JAPANESE",
-#     "title": "testTitle",
-#     "comment": "Comment Test",
-#     "receivers": 
-#     [
-#         {
-#             "mailAddress1": "${mailAddress1}"
-#         }
-#     ]
-# }
-# EOF
-# `
 
-echo ${resMailRegist} >> $log 2>&1
-
-
-echo "Access mailApi End" >> $log 2>&1
-
-# メールID取得
-mailId=`echo ${resMailRegist} | jq '.id'`
-echo "メールID：${mailId}" >> $log 2>&1
-
-# ファイルID取得
-fileId=`echo ${resMailRegist} | jq -r '.attachedFiles[].id'`
-echo "ファイルID:${fileId}" >> $log 2>&1
-
-# ファイル登録API実行
-echo "ファイル登録API実行" >> $log 2>&1
-echo "Access fileApi Start" >> $log 2>&1
-echo "$requesturi/sdms/mails/$mailId/resume/$fileId" >> $log 2>&1
+  echo ${resMailRegist} >> $log 2>&1
+  echo "Access mailApi End" >> $log 2>&1
+  
+  # メールID取得
+  mailId=`echo ${resMailRegist} | jq '.id'`
+  echo "メールID：${mailId}" >> $log 2>&1
+  
+  # ファイルID取得
+  fileId=`echo ${resMailRegist} | jq -r '.attachedFiles[].id'`
+  echo "ファイルID:${fileId}" >> $log 2>&1
+  
+  # ファイル登録API実行
+  echo "ファイル登録API実行" >> $log 2>&1
+  echo "Access fileApi Start" >> $log 2>&1
+  echo "$requesturi/sdms/mails/$mailId/resume/$fileId" >> $log 2>&1
 
   resFileRegist=`curl -X POST "$requesturi/sdms/mails/$mailId/resume/$fileId" \
        -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
        -H "Content-Type: multipart/form-data" \
        -F "file=@$file"
   `
-  
-  # リクエストとレスポンスを表示するオプション付きのcurlコマンド(障害時のデバッグに利用)
-  # resFileRegist=`curl --verbose \
-  #       -X POST "$requesturi/sdms/mails/$mailId/resume/$fileId" \
-  #       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
-  #       -H "Content-Type: multipart/form-data" \
-  #       -F "file=@$file"
-  # `
-  
+
   echo ${resFileRegist} >> $log 2>&1
-  
+
   # 変数resMailRegistに対して、JSON形式で値チェック行い、コール数上限エラー出た際1分スリープ入れる。
    if [[  $( echo $resFileRegist | jq 'select(contains({ statusCode: 429 }))') ]]; then
       echo "-------------------------------------------------------------"
@@ -185,17 +148,6 @@ resTaskAnswer=`curl  -X GET "$requesturi/sdms/mails/history/$mailId"\
 	}
 EOF
 `
-# リクエストとレスポンスを表示するオプション付きのcurlコマンド(障害時のデバッグに利用)
-# resTaskAnswer=`curl --verbose \
-#       -X GET "$requesturi/sdms/mails/history/$mailId"\
-#       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
-#       -H "Content-Type: application/json" \
-#       --data-binary @- <<EOF | jq
-# 	{
-# 		"mailId": ${mailId}
-# 	}
-# EOF
-# `
 
 # ステータス取得
 echo "ステータス取得" >> $log 2>&1
