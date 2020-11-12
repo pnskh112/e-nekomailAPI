@@ -69,7 +69,7 @@ for i in 0 1 2 3; do
   # リクエストボディの定義
   echo "メール情報登録API実行" >> $log 2>&1
 
-res=`curl -X POST "$requesturi/sdms/mails/add"\
+resMailRegist=`curl -X POST "$requesturi/sdms/mails/add"\
       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
       -H "Content-Type: application/json" \
       --data-binary @- <<EOF | jq
@@ -112,25 +112,21 @@ EOF
   echo "Access fileApi Start" >> $log 2>&1
   echo "$requesturi/sdms/mails/$mailId/resume/$fileId" >> $log 2>&1
 
-  res2=`curl -X POST "$requesturi/sdms/mails/$mailId/resume/$fileId" \
+  resFileRegist=`curl -X POST "$requesturi/sdms/mails/$mailId/resume/$fileId" \
        -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
        -H "Content-Type: multipart/form-data" \
        -F "file=@$file"
   `
   
   echo ${resFileRegist} >> $log 2>&1
-  
-  # 変数resに対して、JSON形式で値チェック行い、コール数上限エラー出た際1分スリープ入れる。
-# デバッグ用常にTrue
-###  if [ $i != 9 ]; then
-   if [[  $( echo $res2 | jq 'select(contains({ statusCode: 429 }))') ]]; then
+  # 変数resMailRegistに対して、JSON形式で値チェック行い、コール数上限エラー出た際1分スリープ入れる。
+   if [[  $( echo $resFileRegist | jq 'select(contains({ statusCode: 429 }))') ]]; then
       echo "-------------------------------------------------------------"
       echo "コール数上限のレスポンスがセキュアデリバーより返されました。"
       echo "1分間スリープの後、再度実行致します。"
       echo "-------------------------------------------------------------"
       sleep 1m
-  # コール数上限エラーなく、ファイル登録時のレスポンス返ってくればループ抜ける
-  ### else if [[ $( echo $res | jq 'select(.attachedFiles != "NULL")')  ]]; then
+  # コール数上限エラーなければループ抜ける
   else
       break
   fi
@@ -143,7 +139,7 @@ echo "------------------------------------------------" >> $log 2>&1
 # タスク結果取得API実行
 echo "タスク結果取得API実行" >> $log 2>&1
 echo "Access taskApi Start" >> $log 2>&1
-res3=`curl  -X GET "$requesturi/sdms/mails/history/$mailId"\
+resTaskAnswer=`curl  -X GET "$requesturi/sdms/mails/history/$mailId"\
       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
       -H "Content-Type: application/json" \
       --data-binary @- <<EOF | jq
@@ -152,11 +148,10 @@ res3=`curl  -X GET "$requesturi/sdms/mails/history/$mailId"\
 	}
 EOF
 `
-
 # ステータス取得
 echo "ステータス取得" >> $log 2>&1
-status=`echo ${res3} | jq -r '.status'`
-echo ${res3} >> $log 2>&1
+status=`echo ${resTaskAnswer} | jq -r '.status'`
+echo ${resTaskAnswer} >> $log 2>&1
 echo ${status} >> $log 2>&1
 # タスク結果を取得して、「FINISHED」であれば終了
 if [ $status = "FINISHED" ]; then
