@@ -5,12 +5,12 @@ export DISPLAY='unix:0.0'
 #
 #    概要        ： e-ネコセキュアデリバー　受信
 #
-#    履歴        ：2020/09/28 Create by hoge
+#    履歴        ：2020/09/28 Create by S.Takeuchi
 #
 #*******************************************************************************
 
 # 認証キーセット
-OcpApimSubscriptionKey="---hoge---"
+OcpApimSubscriptionKey="5bd066a503af4753a8ab751925e9c531"
 srcName="e-nekomail_Receive_api.sh"
 # mailId初期値
 mailId=""
@@ -54,23 +54,6 @@ res=`curl  -X POST "$requesturi/sdms/mails/inbox/" \
 }
 EOF
 `
-# リクエストとレスポンスを表示するオプション付きのcurlコマンド(障害時のデバッグに利用)
-# curl --verbose \
-# res=`curl --verbose \
-#       -X POST "$requesturi/sdms/mails/inbox/" \
-#       -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey" \
-#       -H "Content-Type: application/json" \
-#       -d @- << EOF | jq
-# {
-#     "inboxMailStatus": "NOT_READ",
-# 	"sendDateFrom": "${date_ymd}T00:00:00.000Z",
-# 	"sendDateTo": "${date_ymd}T23:59:59.000Z",
-# 	"skip": 0,
-# 	"take": 1
-# }
-# EOF
-# `
-
 echo ${res} >> $log 2>&1
 echo "Access ReceiveListApi End" >> $log 2>&1
 
@@ -87,10 +70,6 @@ for key in $(echo ${res} | jq '.iwsdWebMail[].iwsdreceiver[].id'); do
     echo "受信詳細情報取得API実行" >> $log 2>&1
     res2=`curl  -X GET "$requesturi/sdms/mails/inbox/$mailId" \
           -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey"`
-    # リクエストとレスポンスを表示するオプション付きのcurlコマンド(障害時のデバッグに利用)
-    # res2=`curl --verbose \
-    #   -X GET "$requesturi/sdms/mails/inbox/$mailId" \
-    #   -H "Ocp-Apim-Subscription-Key: $OcpApimSubscriptionKey"`
 
     # リクエスト回数エラーがセキュアデリバー側から返ってくることがあるためエラーキャッチを追加。
     if [[  $( echo $res2 | jq 'select(contains({ statusCode: 429 }))') ]]; then
@@ -121,19 +100,12 @@ for key in $(echo ${res} | jq '.iwsdWebMail[].iwsdreceiver[].id'); do
         echo "---FileName---" >> $log 2>&1
         echo $arrayFileName[$i] >> $log 2>&1
 
-
         # ダウンロード API実行
         echo "ダウンロード API実行" >> $log 2>&1
         echo "Access download Start" >> $log 2>&1
         echo "$requesturi/sdms/mails/inbox/${mailId}/attachment/${fileId}/" >> $log 2>&1
-        
-        # リクエストとレスポンスを表示するオプション付きのcurlコマンド
-        # res3=`curl  --verbose \
-        #             -X GET  "$requesturi/sdms/mails/inbox/${mailId}/attachment/${fileId}/" \
-        #             -H "Ocp-Apim-Subscription-Key: ${OcpApimSubscriptionKey}" \
-        #             -H "Content-Type: application/json" \
-        #             -o "${receive_dir}${arrayFileName[${i}]}"`
-        res3=`curl  -X GET  "$requesturi/sdms/mails/inbox/${mailId}/attachment/${fileId}/" \
+      
+        resShowResponse=`curl  -X GET  "$requesturi/sdms/mails/inbox/${mailId}/attachment/${fileId}/" \
                     -H "Ocp-Apim-Subscription-Key: ${OcpApimSubscriptionKey}" \
                     -H "Content-Type: application/json" \
                     -o "${receive_dir}${arrayFileName[${i}]}"`
