@@ -5,7 +5,7 @@ export DISPLAY='unix:0.0'
 #
 #    概要        ： e-ネコセキュアデリバー　受信
 #
-#    履歴        ：2020/09/28 Create by S.Takeuchi
+#    履歴        ：2020/09/28 Create by hoge
 #
 #*******************************************************************************
 
@@ -15,7 +15,7 @@ export DISPLAY='unix:0.0'
 set -e -o pipefail
 
 # 認証キーセット
-OcpApimSubscriptionKey="5bd066a503af4753a8ab751925e9c531"
+OcpApimSubscriptionKey="---hoge---"
 srcName="e-nekomail_Receive_api.sh"
 # mailId初期値
 mailId=""
